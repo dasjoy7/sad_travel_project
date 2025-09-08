@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:sad_travel_project/data/tourist_places_data.dart';
+import 'all_jilas_page.dart';
+import 'package:sad_travel_project/pages/places_list_page.dart';
 
 class HomePage extends StatelessWidget {
   final String username;
 
   HomePage({this.username = "Guest"});
-
-  // List of Bangladesh districts (Jilas)
-  final List<String> jilas = [
-    "Dhaka", "Chattogram", "Sylhet", "Khulna", "Rajshahi",
-    "Barishal", "Rangpur", "Mymensingh", "Comilla", "Jessore",
-    "Bogra", "Cox's Bazar", "Pabna", "Tangail", "Dinajpur",
-    // add more as needed
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +16,13 @@ class HomePage extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Colors.green),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green, Colors.teal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +96,57 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Explore Categories
+            // 1. Choose Your Destination
+            Text(
+              'Choose Your Destination',
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[800]),
+            ),
+            SizedBox(height: 16),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AllJilasPage()),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              splashColor: Colors.green.withOpacity(0.3),
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade300, Colors.green.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: Offset(2, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'Tap to View All Jilas',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 30),
+
+            // 2. Explore Categories
             Text(
               'Explore Categories',
               style: TextStyle(
@@ -111,41 +162,17 @@ class HomePage extends StatelessWidget {
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               children: [
-                optionBlock('Historical', Icons.account_balance),
-                optionBlock('Nature', Icons.park),
-                optionBlock('Beaches', Icons.beach_access),
-                optionBlock('Hills', Icons.terrain),
-                optionBlock('Rivers', Icons.water),
-                optionBlock('Museums', Icons.museum),
+                optionBlock('Historical', Icons.account_balance, context),
+                optionBlock('Nature', Icons.park, context),
+                optionBlock('Beaches', Icons.beach_access, context),
+                optionBlock('Hills', Icons.terrain, context),
+                optionBlock('Rivers', Icons.water, context),
+                optionBlock('Museums', Icons.museum, context),
               ],
             ),
             SizedBox(height: 30),
 
-            // 2. Choose Your Destination
-            Text(
-              'Choose Your Destination',
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[800]),
-            ),
-            SizedBox(height: 16),
-            GridView.builder(
-              itemCount: jilas.length,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 2),
-              itemBuilder: (context, index) {
-                return destinationCard(jilas[index]);
-              },
-            ),
-            SizedBox(height: 30),
-
-            // 3. Other Sections (Blogs, Videos, Food, Festivals)
+            // 3. Popular Sections
             Text(
               'Popular Sections',
               style: TextStyle(
@@ -161,10 +188,10 @@ class HomePage extends StatelessWidget {
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               children: [
-                optionBlock('Travel Blogs', Icons.book),
-                optionBlock('Travel Videos', Icons.video_collection),
-                optionBlock('Food & Cuisine', Icons.restaurant),
-                optionBlock('Festivals & Events', Icons.event),
+                optionBlock('Travel Blogs', Icons.book, context),
+                optionBlock('Travel Videos', Icons.video_collection, context),
+                optionBlock('Food & Cuisine', Icons.restaurant, context),
+                optionBlock('Festivals & Events', Icons.event, context),
               ],
             ),
           ],
@@ -173,52 +200,53 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Reusable category block
-  Widget optionBlock(String title, IconData icon) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.green[100],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: () {},
+  // Reusable category block with navigation
+  Widget optionBlock(String title, IconData icon, BuildContext context) {
+    // Filter places according to the selected category
+    final filteredPlaces = touristPlaces
+        .where((place) => place.category == title)
+        .toList();
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      splashColor: Colors.green.withOpacity(0.3),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                PlacesListPage(title: title, places: filteredPlaces),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade200, Colors.green.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.4),
+              blurRadius: 6,
+              offset: Offset(2, 4),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Colors.green[800]),
+            Icon(icon, size: 50, color: Colors.white),
             SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[800]),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  // Destination Card
-  Widget destinationCard(String title) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade200),
-      ),
-      child: InkWell(
-        onTap: () {
-          // TODO: Navigate to district details
-        },
-        child: Center(
-          child: Text(
-            title,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.green[900]),
-            textAlign: TextAlign.center,
-          ),
         ),
       ),
     );
