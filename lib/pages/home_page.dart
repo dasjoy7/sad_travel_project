@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:sad_travel_project/pages/signinpage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sad_travel_project/data/tourist_places_data.dart';
+import 'package:sad_travel_project/pages/contribute_place_page.dart';
+import 'package:sad_travel_project/pages/search_page.dart';
 import 'all_jilas_page.dart';
-import 'package:sad_travel_project/pages/places_list_page.dart';
+import 'places_list_page.dart';
 
 class HomePage extends StatelessWidget {
   final String username;
 
   HomePage({this.username = "Guest"});
 
+  Future<void> _signOut(BuildContext context) async {
+    await Supabase.instance.client.auth.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SignInPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
@@ -47,12 +58,25 @@ class HomePage extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.favorite),
               title: Text('Favorites'),
-              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.add_location),
+              title: Text('Contribute a Place'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ContributePlacePage()),
+                );
+              },
             ),
             ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
-              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Log Out'),
+              onTap: () => _signOut(context),
             ),
           ],
         ),
@@ -87,7 +111,12 @@ class HomePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchPage()),
+              );
+            },
           ),
         ],
       ),
@@ -96,13 +125,13 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Choose Your Destination
             Text(
               'Choose Your Destination',
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[800]),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
             ),
             SizedBox(height: 16),
             InkWell(
@@ -150,9 +179,10 @@ class HomePage extends StatelessWidget {
             Text(
               'Explore Categories',
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[800]),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
             ),
             SizedBox(height: 16),
             GridView.count(
@@ -168,17 +198,18 @@ class HomePage extends StatelessWidget {
                 optionBlock('Hills', Icons.terrain, context),
                 optionBlock('Rivers', Icons.water, context),
                 optionBlock('Museums', Icons.museum, context),
+                optionBlock('Contribute Place', Icons.add_location_alt, context),
               ],
             ),
             SizedBox(height: 30),
 
-            // 3. Popular Sections
             Text(
               'Popular Sections',
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[800]),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
             ),
             SizedBox(height: 16),
             GridView.count(
@@ -200,12 +231,23 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Reusable category block with navigation
   Widget optionBlock(String title, IconData icon, BuildContext context) {
-    // Filter places according to the selected category
-    final filteredPlaces = touristPlaces
-        .where((place) => place.category == title)
-        .toList();
+    if (title == 'Contribute Place') {
+      return InkWell(
+        borderRadius: BorderRadius.circular(16),
+        splashColor: Colors.green.withOpacity(0.3),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ContributePlacePage()),
+          );
+        },
+        child: buildBlockUI(title, icon),
+      );
+    }
+
+    final filteredPlaces =
+    touristPlaces.where((place) => place.category == title).toList();
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -219,35 +261,42 @@ class HomePage extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green.shade200, Colors.green.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      child: buildBlockUI(title, icon),
+    );
+  }
+
+  Widget buildBlockUI(String title, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade200, Colors.green.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.4),
+            blurRadius: 6,
+            offset: Offset(2, 4),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.green.withOpacity(0.4),
-              blurRadius: 6,
-              offset: Offset(2, 4),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 50, color: Colors.white),
+          SizedBox(height: 10),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 50, color: Colors.white),
-            SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

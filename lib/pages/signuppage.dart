@@ -1,7 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sad_travel_project/pages/home_page.dart';
 
-class SignUpPage extends StatelessWidget {
+class SignUpPage extends StatefulWidget {
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _loading = false;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  Future<void> _signUp() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+    final fullName = _fullNameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty || fullName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': fullName},
+      );
+
+      if (response.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Account created successfully!")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage(username: fullName)),
+        );
+      }
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Sign Up failed")),
+        );
+      }
+    }
+    catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+
+    setState(() => _loading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,11 +78,11 @@ class SignUpPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-            // padding: EdgeInsets.symmetric(horizontal: 24),
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
-              // crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
                 Container(
                   height: 200,
                   width: double.infinity,
@@ -35,14 +104,18 @@ class SignUpPage extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 SizedBox(height: 20),
+
 
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+
                       TextField(
+                        controller: _fullNameController,
                         decoration: InputDecoration(
                           hintText: "Full Name",
                           filled: true,
@@ -55,8 +128,8 @@ class SignUpPage extends StatelessWidget {
                       ),
                       SizedBox(height: 15),
 
-                      // Email Field
                       TextField(
+                        controller: _emailController,
                         decoration: InputDecoration(
                           hintText: "Email Address",
                           filled: true,
@@ -69,9 +142,9 @@ class SignUpPage extends StatelessWidget {
                       ),
                       SizedBox(height: 15),
 
-                      // Password Field
                       TextField(
-                        obscureText: true,
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           hintText: "Password",
                           filled: true,
@@ -80,14 +153,23 @@ class SignUpPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          suffixIcon: Icon(Icons.visibility),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
                       SizedBox(height: 15),
 
-                      // Confirm Password Field
                       TextField(
-                        obscureText: true,
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
                         decoration: InputDecoration(
                           hintText: "Confirm Password",
                           filled: true,
@@ -96,23 +178,25 @@ class SignUpPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          suffixIcon: Icon(Icons.visibility),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
                       SizedBox(height: 20),
 
                       // Sign Up Button
-                      ElevatedButton(
-                        onPressed: () {
-                          // After successful sign in
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Sign Up Successful!')),
-                          );
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => HomePage(username: 'Joy')),
-                          );
-                        },
+                      _loading
+                          ? Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                        onPressed: _signUp,
                         style: ElevatedButton.styleFrom(
                           minimumSize: Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
@@ -122,12 +206,11 @@ class SignUpPage extends StatelessWidget {
                         child: Text("Sign Up"),
                       ),
 
-
                       SizedBox(height: 20),
                       Center(child: Text("OR CONTINUE WITH")),
                       SizedBox(height: 15),
 
-                      // Social Login Buttons
+                      // Social Login Placeholder
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -148,12 +231,10 @@ class SignUpPage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            "Already have an account?",
-                          ),
+                          Text("Already have an account?"),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context); // Go back to Sign In page
+                              Navigator.pop(context); // Back to Sign In
                             },
                             child: Text("Sign In"),
                           ),

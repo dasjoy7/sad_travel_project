@@ -77,7 +77,8 @@ class AllJilasPage extends StatelessWidget {
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
-                      fontWeight: FontWeight.bold),
+                      fontWeight: FontWeight.bold
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
